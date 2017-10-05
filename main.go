@@ -3,14 +3,9 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/eunomie/github-board-exporter/github"
 	log "github.com/sirupsen/logrus"
-)
-
-const (
-	issueMetricsPattern = "issues{column=\"%s\"} %d"
 )
 
 func main() {
@@ -41,12 +36,7 @@ func metrics(g *github.Github, id int) func(w http.ResponseWriter, r *http.Reque
 			http.Error(w, errString, http.StatusInternalServerError)
 		}
 		log.Println("  project fetched")
-		metrics := []string{}
-		for _, col := range p.Columns {
-			metric := fmt.Sprintf(issueMetricsPattern, col.Name, col.NumberOfIssues())
-			metrics = append(metrics, metric)
-		}
-		fmt.Fprintln(w, strings.Join(metrics, "\n"))
+		fmt.Fprintln(w, p.Metrics())
 		log.Println("end metrics")
 	}
 }

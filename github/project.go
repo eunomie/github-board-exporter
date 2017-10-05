@@ -2,6 +2,7 @@ package github
 
 import (
 	"fmt"
+	"strings"
 )
 
 // Project from github
@@ -44,7 +45,8 @@ type cardFields struct {
 }
 
 const (
-	projectURLPattern = "https://api.github.com/projects/%d"
+	projectURLPattern   = "https://api.github.com/projects/%d"
+	issueMetricsPattern = "issues{column=\"%s\"} %d"
 )
 
 // NewProject creates a new representation of a github project
@@ -72,7 +74,7 @@ func NewProject(id int, github *Github) (*Project, error) {
 
 // NumberOfIssues count the number of cards with a content (issues, PR)
 // in a column
-func (c *Column) NumberOfIssues() int {
+func (c *Column) numberOfIssues() int {
 	n := 0
 	for _, card := range c.Cards {
 		if card.ContentURL != "" {
@@ -80,4 +82,14 @@ func (c *Column) NumberOfIssues() int {
 		}
 	}
 	return n
+}
+
+// Metrics compatible with prometheus
+func (p *Project) Metrics() string {
+	metrics := []string{}
+	for _, col := range p.Columns {
+		metric := fmt.Sprintf(issueMetricsPattern, col.Name, col.numberOfIssues())
+		metrics = append(metrics, metric)
+	}
+	return strings.Join(metrics, "\n")
 }
