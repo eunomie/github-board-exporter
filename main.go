@@ -26,11 +26,9 @@ func main() {
 	log.Println(project.ID)
 
 	log.Println(project.Columns.GetByName("📚 Backlog"))
-	for i := 0; i < project.Columns.Count(); i++ {
-		col, _ := project.Columns.Get(i)
+	for _, col := range project.Columns {
 		log.Println(col.Name)
-		for j := 0; j < col.Cards.Count(); j++ {
-			card, _ := col.Cards.Get(j)
+		for _, card := range col.Cards {
 			if card.Note != "" {
 				log.Println("  " + card.Note)
 			} else {
