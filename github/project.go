@@ -69,3 +69,15 @@ func NewProject(id int, github *Github) (*Project, error) {
 
 	return &p, nil
 }
+
+// NumberOfIssues count the number of cards with a content (issues, PR)
+// in a column
+func (c *Column) NumberOfIssues() int {
+	n := 0
+	for _, card := range c.Cards {
+		if card.ContentURL != "" {
+			n++
+		}
+	}
+	return n
+}

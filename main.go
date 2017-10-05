@@ -31,16 +31,6 @@ func main() {
 	http.ListenAndServe(":8080", nil)
 }
 
-func numberOfIssues(cards []github.Card) int {
-	n := 0
-	for _, card := range cards {
-		if card.ContentURL != "" {
-			n++
-		}
-	}
-	return n
-}
-
 func metrics(g *github.Github, id int) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		p, err := github.NewProject(id, g)
@@ -51,7 +41,7 @@ func metrics(g *github.Github, id int) func(w http.ResponseWriter, r *http.Reque
 		}
 		metrics := []string{}
 		for _, col := range p.Columns {
-			metric := fmt.Sprintf(issueMetricsPattern, col.Name, numberOfIssues(col.Cards))
+			metric := fmt.Sprintf(issueMetricsPattern, col.Name, col.NumberOfIssues())
 			metrics = append(metrics, metric)
 		}
 		fmt.Fprintln(w, strings.Join(metrics, "\n"))
