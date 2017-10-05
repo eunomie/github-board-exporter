@@ -1,6 +1,7 @@
 package github
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -66,16 +67,36 @@ func (g *Github) Get(url string) (*http.Response, error) {
 	return g.Do(http.MethodGet, url, http.NoBody)
 }
 
-// GetString get a github path and return the body as string
-func (g *Github) GetString(url string) (string, error) {
+func (g *Github) getBytes(url string) ([]byte, error) {
 	resp, err := g.Get(url)
 	if err != nil {
-		return "", fmt.Errorf("could not GetString for url %s: %v", url, err)
+		return nil, fmt.Errorf("could not GetString for url %s: %v", url, err)
 	}
 	defer resp.Body.Close()
 	bytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("could not read body for url %s: %v", url, err)
+		return nil, fmt.Errorf("could not read body for url %s: %v", url, err)
+	}
+	return bytes, nil
+}
+
+// GetString get a github path and return the body as string
+func (g *Github) GetString(url string) (string, error) {
+	bytes, err := g.getBytes(url)
+	if err != nil {
+		return "", err
 	}
 	return string(bytes), nil
+}
+
+// GetJSON fill an interface with the body as json
+func (g *Github) GetJSON(url string, v interface{}) error {
+	bytes, err := g.getBytes(url)
+	if err != nil {
+		return err
+	}
+	if err := json.Unmarshal(bytes, v); err != nil {
+		return fmt.Errorf("could not parse json for url %s: %v", url, err)
+	}
+	return nil
 }
