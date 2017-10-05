@@ -19,7 +19,7 @@ func main() {
 		log.Fatalf("could not read configuration: %v", err)
 	}
 
-	log.Printf("Read project configuration for id %d", conf.projectID)
+	log.Printf("project id %d", conf.projectID)
 
 	g, err := github.NewGithub(conf.accessToken)
 	if err != nil {
@@ -33,17 +33,20 @@ func main() {
 
 func metrics(g *github.Github, id int) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Println("ask metrics")
 		p, err := github.NewProject(id, g)
 		if err != nil {
 			errString := fmt.Sprintf("could not read project %d: %v", id, err)
 			log.Errorln(errString)
 			http.Error(w, errString, http.StatusInternalServerError)
 		}
+		log.Println("  project fetched")
 		metrics := []string{}
 		for _, col := range p.Columns {
 			metric := fmt.Sprintf(issueMetricsPattern, col.Name, col.NumberOfIssues())
 			metrics = append(metrics, metric)
 		}
 		fmt.Fprintln(w, strings.Join(metrics, "\n"))
+		log.Println("end metrics")
 	}
 }
