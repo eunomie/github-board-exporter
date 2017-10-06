@@ -6,10 +6,11 @@ import (
 	"strconv"
 )
 
-// Configuration contains project id and access token to be authentified.
+// Configuration contains project id, access token to be authentified and user.
 type Configuration struct {
 	projectID   int
 	accessToken string
+	user        string
 }
 
 func newConfiguration() (*Configuration, error) {
@@ -25,9 +26,14 @@ func newConfiguration() (*Configuration, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not parse PROJECT_ID %s", projectIDStr)
 	}
+	user, set := os.LookupEnv("GITHUB_USER")
+	if !set {
+		return nil, fmt.Errorf("GITHUB_USER must be defined")
+	}
 
 	return &Configuration{
 		projectID,
 		accessToken,
+		user,
 	}, nil
 }
