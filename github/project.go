@@ -45,8 +45,10 @@ type cardFields struct {
 }
 
 const (
-	projectURLPattern   = "https://api.github.com/projects/%d"
-	issueMetricsPattern = "issues{column=\"%s\"} %d"
+	projectURLPattern         = "https://api.github.com/projects/%d"
+	issuesMetricsPattern      = "board_issues{column=\"%s\",project=\"%d\"} %d"
+	totalIssuesMetricsPattern = "board_issues_count{project=\"%d\"} %d"
+	wipIssuesMetricsPattern   = "board_issues_wip{project=\"%d\"} %d"
 )
 
 // NewProject creates a new representation of a github project
@@ -87,9 +89,21 @@ func (c *Column) numberOfIssues() int {
 // Metrics compatible with prometheus
 func (p *Project) Metrics() string {
 	metrics := []string{}
-	for _, col := range p.Columns {
-		metric := fmt.Sprintf(issueMetricsPattern, col.Name, col.numberOfIssues())
+	totalIssues := 0
+	wipIssues := 0
+	cols := len(p.Columns)
+	for i, col := range p.Columns {
+		nbIssues := col.numberOfIssues()
+		totalIssues += nbIssues
+		if i > 0 && i < cols-1 {
+			wipIssues += nbIssues
+		}
+		metric := fmt.Sprintf(issuesMetricsPattern, col.Name, p.ID, nbIssues)
 		metrics = append(metrics, metric)
 	}
+	total := fmt.Sprintf(totalIssuesMetricsPattern, p.ID, totalIssues)
+	metrics = append(metrics, total)
+	wip := fmt.Sprintf(wipIssuesMetricsPattern, p.ID, wipIssues)
+	metrics = append(metrics, wip)
 	return strings.Join(metrics, "\n")
 }
