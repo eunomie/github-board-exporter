@@ -2,15 +2,17 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
-	"strconv"
+
+	"gopkg.in/yaml.v2"
 )
 
 // Configuration contains project id, access token to be authentified and user.
 type Configuration struct {
-	projectID   int
-	accessToken string
-	user        string
+	AccessToken string
+	ProjectID   int    `yaml:"project_id"`
+	User        string `yaml:"github_user"`
 }
 
 func newConfiguration() (*Configuration, error) {
@@ -18,22 +20,25 @@ func newConfiguration() (*Configuration, error) {
 	if !set {
 		return nil, fmt.Errorf("GITHUB_ACCESS_TOKEN must be defined")
 	}
-	projectIDStr, set := os.LookupEnv("PROJECT_ID")
-	if !set {
-		return nil, fmt.Errorf("PROJECT_ID must be defined")
-	}
-	projectID, err := strconv.Atoi(projectIDStr)
+
+	conf := Configuration{AccessToken: accessToken}
+
+	data, err := ioutil.ReadFile("config.yaml")
 	if err != nil {
-		return nil, fmt.Errorf("could not parse PROJECT_ID %s", projectIDStr)
-	}
-	user, set := os.LookupEnv("GITHUB_USER")
-	if !set {
-		return nil, fmt.Errorf("GITHUB_USER must be defined")
+		return nil, fmt.Errorf("could not read config file: %v", err)
 	}
 
-	return &Configuration{
-		projectID,
-		accessToken,
-		user,
-	}, nil
+	if err := yaml.Unmarshal(data, &conf); err != nil {
+		return nil, fmt.Errorf("could not parse configuration file: %v", err)
+	}
+
+	if conf.ProjectID == 0 {
+		return nil, fmt.Errorf("project id is missing")
+	}
+
+	if conf.User == "" {
+		return nil, fmt.Errorf("github user is missing")
+	}
+
+	return &conf, nil
 }

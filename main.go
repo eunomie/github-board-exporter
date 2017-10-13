@@ -16,14 +16,14 @@ func main() {
 		log.Fatalf("could not read configuration: %v", err)
 	}
 
-	log.Printf("project id %d", conf.projectID)
+	log.Printf("project id %d", conf.ProjectID)
 
-	g, err := github.NewGithub(conf.accessToken)
+	g, err := github.NewGithub(conf.AccessToken)
 	if err != nil {
 		log.Fatalf("could not create Github client: %v", err)
 	}
 
-	c := cache.NewCache(30*time.Minute, allMetrics(conf.projectID, conf.user, g))
+	c := cache.NewCache(30*time.Minute, allMetrics(conf.ProjectID, conf.User, g))
 	http.HandleFunc("/metrics", metrics(c))
 	http.ListenAndServe(":8080", nil)
 }
