@@ -1,2 +1,5 @@
 project_id: Github Project ID
 github_user: The user/org to search opened PR
+limits:
+- name: Name of the column
+  limit: limit

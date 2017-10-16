@@ -6,12 +6,13 @@ import (
 	"time"
 
 	"github.com/eunomie/github-board-exporter/cache"
+	"github.com/eunomie/github-board-exporter/configuration"
 	"github.com/eunomie/github-board-exporter/github"
 	log "github.com/sirupsen/logrus"
 )
 
 func main() {
-	conf, err := newConfiguration()
+	conf, err := configuration.NewConfiguration()
 	if err != nil {
 		log.Fatalf("could not read configuration: %v", err)
 	}
@@ -36,7 +37,7 @@ func metrics(c *cache.Cache) func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func allMetrics(c *Configuration, g *github.Github) func() (string, error) {
+func allMetrics(c *configuration.Configuration, g *github.Github) func() (string, error) {
 	return func() (string, error) {
 		id := c.ProjectID
 		u := c.User
@@ -45,7 +46,7 @@ func allMetrics(c *Configuration, g *github.Github) func() (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("could not read project %d: %v", id, err)
 		}
-		boardMetrics := p.Metrics()
+		boardMetrics := p.Metrics(c)
 
 		pr, err := github.PullRequestsMetrics(g, u)
 		if err != nil {

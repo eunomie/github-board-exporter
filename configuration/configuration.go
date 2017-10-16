@@ -1,4 +1,4 @@
-package main
+package configuration
 
 import (
 	"fmt"
@@ -13,9 +13,17 @@ type Configuration struct {
 	AccessToken string
 	ProjectID   int    `yaml:"project_id"`
 	User        string `yaml:"github_user"`
+	Limits      []Limit
 }
 
-func newConfiguration() (*Configuration, error) {
+// Limit is the maximum number of task per column
+type Limit struct {
+	Name  string
+	Limit int
+}
+
+// NewConfiguration reads config,yaml
+func NewConfiguration() (*Configuration, error) {
 	accessToken, set := os.LookupEnv("GITHUB_ACCESS_TOKEN")
 	if !set {
 		return nil, fmt.Errorf("GITHUB_ACCESS_TOKEN must be defined")
@@ -41,4 +49,14 @@ func newConfiguration() (*Configuration, error) {
 	}
 
 	return &conf, nil
+}
+
+// Limit returns the maximum number of items in a column
+func (c *Configuration) Limit(colName string) (int, bool) {
+	for _, limit := range c.Limits {
+		if limit.Name == colName {
+			return limit.Limit, true
+		}
+	}
+	return 0, false
 }

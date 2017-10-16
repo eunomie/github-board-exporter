@@ -3,6 +3,8 @@ package github
 import (
 	"fmt"
 	"strings"
+
+	"github.com/eunomie/github-board-exporter/configuration"
 )
 
 // Project from github
@@ -49,6 +51,7 @@ const (
 	issuesMetricsPattern      = "board_issues{column=\"%s\",project=\"%d\"} %d"
 	totalIssuesMetricsPattern = "board_issues_count{project=\"%d\"} %d"
 	wipIssuesMetricsPattern   = "board_issues_wip{project=\"%d\"} %d"
+	limitExceededPattern      = "board_limit_exceeded{column=\"%s\",project=\"%d\",exceeded=\"%s\",limit=\"%d\"} %d"
 )
 
 // NewProject creates a new representation of a github project
@@ -87,7 +90,7 @@ func (c *Column) numberOfIssues() int {
 }
 
 // Metrics compatible with prometheus
-func (p *Project) Metrics() string {
+func (p *Project) Metrics(c *configuration.Configuration) string {
 	metrics := []string{}
 	totalIssues := 0
 	wipIssues := 0
@@ -100,10 +103,30 @@ func (p *Project) Metrics() string {
 		}
 		metric := fmt.Sprintf(issuesMetricsPattern, col.Name, p.ID, nbIssues)
 		metrics = append(metrics, metric)
+		limit, limitSet := c.Limit(col.Name)
+		if limitSet {
+			var exceeded string
+			if nbIssues > limit {
+				exceeded = "true"
+			} else {
+				exceeded = "false"
+			}
+			nbExceeded := max(0, nbIssues-limit)
+			limitMetric := fmt.Sprintf(limitExceededPattern, col.Name, p.ID, exceeded, limit, nbExceeded)
+			metrics = append(metrics, limitMetric)
+		}
 	}
 	total := fmt.Sprintf(totalIssuesMetricsPattern, p.ID, totalIssues)
 	metrics = append(metrics, total)
 	wip := fmt.Sprintf(wipIssuesMetricsPattern, p.ID, wipIssues)
 	metrics = append(metrics, wip)
+
 	return strings.Join(metrics, "\n")
+}
+
+func max(x, y int) int {
+	if x > y {
+		return x
+	}
+	return y
 }
