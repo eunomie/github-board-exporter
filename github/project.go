@@ -25,7 +25,12 @@ type projectFields struct {
 // Column represents a project column from the Github API
 type Column struct {
 	columnFields
-	Cards []Card
+	Cards       []Card
+	NbIssues    int
+	Limit       int
+	LimitSet    bool
+	Exceeded    bool
+	ExtraIssues int
 }
 
 type columnFields struct {
@@ -51,11 +56,11 @@ const (
 	issuesMetricsPattern      = "board_issues{column=\"%s\",project=\"%d\"} %d"
 	totalIssuesMetricsPattern = "board_issues_count{project=\"%d\"} %d"
 	wipIssuesMetricsPattern   = "board_issues_wip{project=\"%d\"} %d"
-	limitExceededPattern      = "board_limit_exceeded{column=\"%s\",project=\"%d\",exceeded=\"%s\",limit=\"%d\"} %d"
+	limitExceededPattern      = "board_limit_exceeded{column=\"%s\",project=\"%d\",exceeded=\"%t\",limit=\"%d\"} %d"
 )
 
 // NewProject creates a new representation of a github project
-func NewProject(id int, github *Github) (*Project, error) {
+func NewProject(id int, github *Github, c *configuration.Configuration) (*Project, error) {
 	url := fmt.Sprintf(projectURLPattern, id)
 	p := Project{}
 
@@ -71,6 +76,12 @@ func NewProject(id int, github *Github) (*Project, error) {
 		col := &p.Columns[i]
 		if err := github.GetJSON(col.CardsURL, &col.Cards); err != nil {
 			return nil, fmt.Errorf("could not fetch cards for project %d: %v", id, err)
+		}
+		col.NbIssues = col.numberOfIssues()
+		col.Limit, col.LimitSet = c.Limit(col.Name)
+		if col.LimitSet {
+			col.Exceeded = col.NbIssues > col.Limit
+			col.ExtraIssues = max(0, col.NbIssues-col.Limit)
 		}
 	}
 
@@ -90,7 +101,7 @@ func (c *Column) numberOfIssues() int {
 }
 
 // Metrics compatible with prometheus
-func (p *Project) Metrics(c *configuration.Configuration) string {
+func (p *Project) Metrics() string {
 	metrics := []string{}
 	totalIssues := 0
 	wipIssues := 0
@@ -103,16 +114,9 @@ func (p *Project) Metrics(c *configuration.Configuration) string {
 		}
 		metric := fmt.Sprintf(issuesMetricsPattern, col.Name, p.ID, nbIssues)
 		metrics = append(metrics, metric)
-		limit, limitSet := c.Limit(col.Name)
-		if limitSet {
-			var exceeded string
-			if nbIssues > limit {
-				exceeded = "true"
-			} else {
-				exceeded = "false"
-			}
-			nbExceeded := max(0, nbIssues-limit)
-			limitMetric := fmt.Sprintf(limitExceededPattern, col.Name, p.ID, exceeded, limit, nbExceeded)
+		if col.LimitSet {
+			limitMetric := fmt.Sprintf(limitExceededPattern, col.Name, p.ID,
+				col.Exceeded, col.Limit, col.ExtraIssues)
 			metrics = append(metrics, limitMetric)
 		}
 	}

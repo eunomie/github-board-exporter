@@ -42,11 +42,11 @@ func allMetrics(c *configuration.Configuration, g *github.Github) func() (string
 		id := c.ProjectID
 		u := c.User
 
-		p, err := github.NewProject(id, g)
+		p, err := github.NewProject(id, g, c)
 		if err != nil {
 			return "", fmt.Errorf("could not read project %d: %v", id, err)
 		}
-		boardMetrics := p.Metrics(c)
+		boardMetrics := p.Metrics()
 
 		pr, err := github.PullRequestsMetrics(g, u)
 		if err != nil {
