@@ -23,7 +23,7 @@ func main() {
 		log.Fatalf("could not create Github client: %v", err)
 	}
 
-	c := cache.NewCache(30*time.Minute, allMetrics(conf.ProjectID, conf.User, g))
+	c := cache.NewCache(30*time.Minute, allMetrics(conf, g))
 	http.HandleFunc("/metrics", metrics(c))
 	http.ListenAndServe(":8080", nil)
 }
@@ -36,19 +36,23 @@ func metrics(c *cache.Cache) func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func allMetrics(id int, u string, g *github.Github) func() (string, error) {
+func allMetrics(c *Configuration, g *github.Github) func() (string, error) {
 	return func() (string, error) {
+		id := c.ProjectID
+		u := c.User
+
 		p, err := github.NewProject(id, g)
 		if err != nil {
 			return "", fmt.Errorf("could not read project %d: %v", id, err)
 		}
+		boardMetrics := p.Metrics()
 
 		pr, err := github.PullRequestsMetrics(g, u)
 		if err != nil {
 			return "", fmt.Errorf("could not read pull request metrics for user %s: %v", u, err)
 		}
 
-		metrics := fmt.Sprintf("%s\n%s", p.Metrics(), pr)
+		metrics := fmt.Sprintf("%s\n%s", boardMetrics, pr)
 		return metrics, nil
 	}
 }
