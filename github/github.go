@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 // Github contains all logic to call Github's api
@@ -92,6 +93,36 @@ func (g *Github) GetString(url string) (string, error) {
 // GetJSON fill an interface with the body as json
 func (g *Github) GetJSON(url string, v interface{}) error {
 	bytes, err := g.getBytes(url)
+	if err != nil {
+		return err
+	}
+	if err := json.Unmarshal(bytes, v); err != nil {
+		return fmt.Errorf("could not parse json for url %s: %v", url, err)
+	}
+	return nil
+}
+
+// Patch github url
+func (g *Github) Patch(url, content string) (*http.Response, error) {
+	return g.Do(http.MethodPatch, url, strings.NewReader(content))
+}
+
+func (g *Github) patchBytes(url, content string) ([]byte, error) {
+	resp, err := g.Patch(url, content)
+	if err != nil {
+		return nil, fmt.Errorf("could not Patch for url %s: %v", url, err)
+	}
+	defer resp.Body.Close()
+	bytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("could not read body for url %s: %v", url, err)
+	}
+	return bytes, nil
+}
+
+// PatchJSON fill an interface with the body as json
+func (g *Github) PatchJSON(url, content string, v interface{}) error {
+	bytes, err := g.patchBytes(url, content)
 	if err != nil {
 		return err
 	}

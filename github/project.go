@@ -52,11 +52,14 @@ type cardFields struct {
 }
 
 const (
-	projectURLPattern         = "https://api.github.com/projects/%d"
-	issuesMetricsPattern      = "board_issues{column=\"%s\",project=\"%d\"} %d"
-	totalIssuesMetricsPattern = "board_issues_count{project=\"%d\"} %d"
-	wipIssuesMetricsPattern   = "board_issues_wip{project=\"%d\"} %d"
-	limitExceededPattern      = "board_limit_exceeded{column=\"%s\",project=\"%d\",exceeded=\"%t\",limit=\"%d\"} %d"
+	projectURLPattern            = "https://api.github.com/projects/%d"
+	issuesMetricsPattern         = "board_issues{column=\"%s\",project=\"%d\"} %d"
+	totalIssuesMetricsPattern    = "board_issues_count{project=\"%d\"} %d"
+	wipIssuesMetricsPattern      = "board_issues_wip{project=\"%d\"} %d"
+	limitExceededPattern         = "board_limit_exceeded{column=\"%s\",project=\"%d\",exceeded=\"%t\",limit=\"%d\"} %d"
+	noteWithoutLimitPattern      = "**Points** `0`\\n**Tasks** `%d`"
+	noteWithLimitPattern         = "**Points** `0`\\n**Tasks** `%d/%d`"
+	noteWithLimitExceededPattern = "**Points** `0`\\n**Tasks** `%d/%d`\\n\\n**Limit exceeded by %d**"
 )
 
 // NewProject creates a new representation of a github project
@@ -83,6 +86,10 @@ func NewProject(id int, github *Github, c *configuration.Configuration) (*Projec
 			col.Exceeded = col.NbIssues > col.Limit
 			col.ExtraIssues = max(0, col.NbIssues-col.Limit)
 		}
+
+		if err := col.updateNote(github); err != nil {
+			return nil, fmt.Errorf("could not update note for column %s: %v", col.Name, err)
+		}
 	}
 
 	return &p, nil
@@ -98,6 +105,42 @@ func (c *Column) numberOfIssues() int {
 		}
 	}
 	return n
+}
+
+func (c *Column) noteContent() string {
+	var noteContent string
+	if c.LimitSet {
+		if c.Exceeded {
+			noteContent = fmt.Sprintf(noteWithLimitExceededPattern, c.NbIssues, c.Limit, c.ExtraIssues)
+		} else {
+			noteContent = fmt.Sprintf(noteWithLimitPattern, c.NbIssues, c.Limit)
+		}
+	} else {
+		noteContent = fmt.Sprintf(noteWithoutLimitPattern, c.NbIssues)
+	}
+	return noteContent
+}
+
+func (c *Column) updateNote(github *Github) error {
+	card := c.firstNote()
+	if card == nil {
+		return nil
+	}
+	noteContent := c.noteContent()
+	if err := card.updateNote(noteContent, github); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Column) firstNote() *Card {
+	for i := range c.Cards {
+		card := &c.Cards[i]
+		if card.ContentURL == "" {
+			return card
+		}
+	}
+	return nil
 }
 
 // Metrics compatible with prometheus
@@ -133,4 +176,9 @@ func max(x, y int) int {
 		return x
 	}
 	return y
+}
+
+func (card *Card) updateNote(content string, github *Github) error {
+	c := fmt.Sprintf("{\"note\": \"%s\"}", content)
+	return github.PatchJSON(card.URL, c, card)
 }
