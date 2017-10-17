@@ -10,64 +10,64 @@ type search struct {
 }
 
 const (
-	openedPRMetricsPattern         = "github_board_pr_count{user=\"%s\"} %d"
-	openedPRToReviewMetricsPattern = "github_board_pr_to_review{user=\"%s\"} %d"
-	issuesMetricsPattern           = "github_board_issues{user=\"%s\",opened=\"%t\"} %d"
-	searchPattern                  = "https://api.github.com/search/issues?q=state:%s+type:%s+user:%s%s"
+	openedPRMetricsPattern         = "github_board_pr_count{org=\"%s\"} %d"
+	openedPRToReviewMetricsPattern = "github_board_pr_to_review{org=\"%s\"} %d"
+	issuesMetricsPattern           = "github_board_issues{org=\"%s\",opened=\"%t\"} %d"
+	searchPattern                  = "https://api.github.com/search/issues?q=state:%s+type:%s+org:%s%s"
 )
 
-// CountOpenedPR returns the number of opened Pull Request for a user
-func CountOpenedPR(github *Github, user string) (int, error) {
-	return count(github, "open", "pr", user, "")
+// CountOpenedPR returns the number of opened Pull Request for an org
+func CountOpenedPR(github *Github, org string) (int, error) {
+	return count(github, "open", "pr", org, "")
 }
 
-// CountOpenedPRToReview returns the number of opened Pull Request for a user, waiting review
-func CountOpenedPRToReview(github *Github, user string) (int, error) {
-	return count(github, "open", "pr", user, "+review:required")
+// CountOpenedPRToReview returns the number of opened Pull Request for an org, waiting review
+func CountOpenedPRToReview(github *Github, org string) (int, error) {
+	return count(github, "open", "pr", org, "+review:required")
 }
 
 // CountOpenedIssues return the number of opened issues accross the org
-func CountOpenedIssues(github *Github, user string) (int, error) {
-	return count(github, "open", "issue", user, "")
+func CountOpenedIssues(github *Github, org string) (int, error) {
+	return count(github, "open", "issue", org, "")
 }
 
 // CountClosedIssues return the number of closed issues accross the org
-func CountClosedIssues(github *Github, user string) (int, error) {
-	return count(github, "closed", "issue", user, "")
+func CountClosedIssues(github *Github, org string) (int, error) {
+	return count(github, "closed", "issue", org, "")
 }
 
 // PullRequestsMetrics for prometheus
-func PullRequestsMetrics(github *Github, user string) (string, error) {
-	openedPR, err := CountOpenedPR(github, user)
+func PullRequestsMetrics(github *Github, org string) (string, error) {
+	openedPR, err := CountOpenedPR(github, org)
 	if err != nil {
 		return "", err
 	}
-	reviewPR, err := CountOpenedPRToReview(github, user)
+	reviewPR, err := CountOpenedPRToReview(github, org)
 	if err != nil {
 		return "", err
 	}
-	openedIssues, err := CountOpenedIssues(github, user)
+	openedIssues, err := CountOpenedIssues(github, org)
 	if err != nil {
 		return "", err
 	}
-	closedIssues, err := CountClosedIssues(github, user)
+	closedIssues, err := CountClosedIssues(github, org)
 	if err != nil {
 		return "", err
 	}
 	metrics := []string{}
-	metrics = append(metrics, fmt.Sprintf(openedPRMetricsPattern, user, openedPR))
-	metrics = append(metrics, fmt.Sprintf(openedPRToReviewMetricsPattern, user, reviewPR))
-	metrics = append(metrics, fmt.Sprintf(issuesMetricsPattern, user, true, openedIssues))
-	metrics = append(metrics, fmt.Sprintf(issuesMetricsPattern, user, false, closedIssues))
+	metrics = append(metrics, fmt.Sprintf(openedPRMetricsPattern, org, openedPR))
+	metrics = append(metrics, fmt.Sprintf(openedPRToReviewMetricsPattern, org, reviewPR))
+	metrics = append(metrics, fmt.Sprintf(issuesMetricsPattern, org, true, openedIssues))
+	metrics = append(metrics, fmt.Sprintf(issuesMetricsPattern, org, false, closedIssues))
 	return strings.Join(metrics, "\n"), nil
 }
 
-func count(github *Github, status, issueType, user, extra string) (int, error) {
-	url := fmt.Sprintf(searchPattern, status, issueType, user, extra)
+func count(github *Github, status, issueType, org, extra string) (int, error) {
+	url := fmt.Sprintf(searchPattern, status, issueType, org, extra)
 	s := search{}
 
 	if err := github.GetJSON(url, &s); err != nil {
-		return 0, fmt.Errorf("could not count %s with status %s, user %s and extra %s: %v", issueType, status, user, extra, err)
+		return 0, fmt.Errorf("could not count %s with status %s, org %s and extra %s: %v", issueType, status, org, extra, err)
 	}
 
 	return s.TotalCount, nil
