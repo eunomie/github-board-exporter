@@ -144,15 +144,14 @@ func (c *Column) firstNote() *Card {
 }
 
 // Metrics compatible with prometheus
-func (p *Project) Metrics() string {
+func (p *Project) Metrics(c *configuration.Configuration) string {
 	metrics := []string{}
 	totalIssues := 0
 	wipIssues := 0
-	cols := len(p.Columns)
-	for i, col := range p.Columns {
+	for _, col := range p.Columns {
 		nbIssues := col.numberOfIssues()
 		totalIssues += nbIssues
-		if i > 0 && i < cols-1 {
+		if c.Wip(col.Name) {
 			wipIssues += nbIssues
 		}
 		metric := fmt.Sprintf(issuesMetricsPattern, col.Name, p.ID, nbIssues)

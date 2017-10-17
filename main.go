@@ -49,7 +49,7 @@ func allMetrics(c *configuration.Configuration, g *github.Github) func() (string
 		if err != nil {
 			return "", fmt.Errorf("could not read project %d: %v", id, err)
 		}
-		metrics = append(metrics, p.Metrics())
+		metrics = append(metrics, p.Metrics(c))
 
 		pr, err := github.PullRequestsMetrics(g, u)
 		if err != nil {

@@ -25,6 +25,7 @@ type Configuration struct {
 type Column struct {
 	Name  string
 	Limit int
+	Wip   bool
 }
 
 // NewConfiguration reads config,yaml
@@ -68,6 +69,16 @@ func (c *Configuration) Limit(colName string) (int, bool) {
 		}
 	}
 	return 0, false
+}
+
+// Wip indicates if a column contains wip or not
+func (c *Configuration) Wip(colName string) bool {
+	for _, col := range c.Columns {
+		if col.Name == colName {
+			return col.Wip
+		}
+	}
+	return false
 }
 
 // Metrics returns conf metrics

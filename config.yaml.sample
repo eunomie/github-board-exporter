@@ -4,3 +4,4 @@ number_of_developers: current number of developers in the team
 columns:
 - name: Name of the column
   limit: limit
+  wip: true/false
