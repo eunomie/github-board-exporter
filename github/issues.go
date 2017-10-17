@@ -37,7 +37,7 @@ func CountClosedIssues(github *Github, repo string) (int, error) {
 }
 
 // PullRequestsMetrics for prometheus
-func PullRequestsMetrics(github *Github, org, repo string) (string, error) {
+func IssuesMetrics(github *Github, org, repo string) (string, error) {
 	openedPR, err := CountOpenedPR(github, org)
 	if err != nil {
 		return "", err
