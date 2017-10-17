@@ -18,11 +18,11 @@ type Configuration struct {
 	ProjectID   int    `yaml:"project_id"`
 	User        string `yaml:"github_user"`
 	NbDevs      int    `yaml:"number_of_developers"`
-	Limits      []Limit
+	Columns     []Column
 }
 
-// Limit is the maximum number of task per column
-type Limit struct {
+// Column contains configuration for a column as limit
+type Column struct {
 	Name  string
 	Limit int
 }
@@ -62,9 +62,9 @@ func NewConfiguration() (*Configuration, error) {
 
 // Limit returns the maximum number of items in a column
 func (c *Configuration) Limit(colName string) (int, bool) {
-	for _, limit := range c.Limits {
-		if limit.Name == colName {
-			return limit.Limit, true
+	for _, col := range c.Columns {
+		if col.Name == colName {
+			return col.Limit, true
 		}
 	}
 	return 0, false
