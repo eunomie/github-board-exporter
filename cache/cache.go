@@ -22,7 +22,9 @@ func NewCache(caching time.Duration, refresh func() (string, error)) *Cache {
 		Content: "",
 	}
 	c.autoRefreshContent()
-	c.refreshContent()
+	go func() {
+		c.refreshContent()
+	}()
 	return &c
 }
 
