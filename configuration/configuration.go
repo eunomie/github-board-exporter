@@ -64,7 +64,7 @@ func NewConfiguration() (*Configuration, error) {
 func (c *Configuration) Limit(colName string) (int, bool) {
 	for _, col := range c.Columns {
 		if col.Name == colName {
-			return col.Limit, true
+			return col.Limit, col.Limit > 0
 		}
 	}
 	return 0, false
