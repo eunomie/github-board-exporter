@@ -1,5 +1,6 @@
 project_id: Github Project ID
 github_user: The user/org to search opened PR
+number_of_developers: current number of developers in the team
 limits:
 - name: Name of the column
   limit: limit

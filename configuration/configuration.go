@@ -8,11 +8,16 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+const (
+	nbDevMetricPattern = "number_of_developers %d"
+)
+
 // Configuration contains project id, access token to be authentified and user.
 type Configuration struct {
 	AccessToken string
 	ProjectID   int    `yaml:"project_id"`
 	User        string `yaml:"github_user"`
+	NbDevs      int    `yaml:"number_of_developers"`
 	Limits      []Limit
 }
 
@@ -48,6 +53,10 @@ func NewConfiguration() (*Configuration, error) {
 		return nil, fmt.Errorf("github user is missing")
 	}
 
+	if conf.NbDevs == 0 {
+		return nil, fmt.Errorf("number_of_developers is missing")
+	}
+
 	return &conf, nil
 }
 
@@ -59,4 +68,9 @@ func (c *Configuration) Limit(colName string) (int, bool) {
 		}
 	}
 	return 0, false
+}
+
+// Metrics returns conf metrics
+func (c *Configuration) Metrics() string {
+	return fmt.Sprintf(nbDevMetricPattern, c.NbDevs)
 }
