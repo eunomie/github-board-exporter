@@ -1,6 +1,7 @@
 project_id: Github Project ID
 github_org: The org to search opened PR
 github_repo: The repo to search issues
+label_bug: label to define a bug
 number_of_developers: current number of developers in the team
 columns:
 - name: Name of the column

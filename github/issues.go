@@ -13,6 +13,7 @@ const (
 	openedPRMetricsPattern         = "github_board_pr_count{org=\"%s\"} %d"
 	openedPRToReviewMetricsPattern = "github_board_pr_to_review{org=\"%s\"} %d"
 	issuesMetricsPattern           = "github_board_issues{repo=\"%s\",opened=\"%t\"} %d"
+	bugsMetricsPattern             = "github_board_bugs{repo=\"%s\"} %d"
 	searchPattern                  = "https://api.github.com/search/issues?q=state:%s+type:%s+%s"
 )
 
@@ -26,18 +27,23 @@ func CountOpenedPRToReview(github *Github, org string) (int, error) {
 	return count(github, "open", "pr", "org:"+org+"+review:required")
 }
 
-// CountOpenedIssues return the number of opened issues accross the org
+// CountOpenedIssues returns the number of opened issues in the repo
 func CountOpenedIssues(github *Github, repo string) (int, error) {
 	return count(github, "open", "issue", "repo:"+repo)
 }
 
-// CountClosedIssues return the number of closed issues accross the org
+// CountClosedIssues returns the number of closed issues in the repo
 func CountClosedIssues(github *Github, repo string) (int, error) {
 	return count(github, "closed", "issue", "repo:"+repo)
 }
 
-// PullRequestsMetrics for prometheus
-func IssuesMetrics(github *Github, org, repo string) (string, error) {
+// CountOpenedBugs returns the number of opened bugs in the repo
+func CountOpenedBugs(github *Github, repo, bugLabel string) (int, error) {
+	return count(github, "open", "issue", "repo:"+repo+"+label:\""+bugLabel+"\"")
+}
+
+// IssuesMetrics for prometheus
+func IssuesMetrics(github *Github, org, repo, bugLabel string) (string, error) {
 	openedPR, err := CountOpenedPR(github, org)
 	if err != nil {
 		return "", err
@@ -54,11 +60,16 @@ func IssuesMetrics(github *Github, org, repo string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	openedBugs, err := CountOpenedBugs(github, repo, bugLabel)
+	if err != nil {
+		return "", err
+	}
 	metrics := []string{}
 	metrics = append(metrics, fmt.Sprintf(openedPRMetricsPattern, org, openedPR))
 	metrics = append(metrics, fmt.Sprintf(openedPRToReviewMetricsPattern, org, reviewPR))
 	metrics = append(metrics, fmt.Sprintf(issuesMetricsPattern, repo, true, openedIssues))
 	metrics = append(metrics, fmt.Sprintf(issuesMetricsPattern, repo, false, closedIssues))
+	metrics = append(metrics, fmt.Sprintf(bugsMetricsPattern, repo, openedBugs))
 	return strings.Join(metrics, "\n"), nil
 }
 

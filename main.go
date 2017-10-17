@@ -44,6 +44,7 @@ func allMetrics(c *configuration.Configuration, g *github.Github) func() (string
 		id := c.ProjectID
 		o := c.Org
 		r := c.Repo
+		b := c.LabelBug
 		metrics := []string{}
 
 		p, err := github.NewProject(id, g, c)
@@ -52,7 +53,7 @@ func allMetrics(c *configuration.Configuration, g *github.Github) func() (string
 		}
 		metrics = append(metrics, p.Metrics(c))
 
-		pr, err := github.IssuesMetrics(g, o, r)
+		pr, err := github.IssuesMetrics(g, o, r, b)
 		if err != nil {
 			return "", fmt.Errorf("could not read pull request metrics for org %s and repo %s: %v", o, r, err)
 		}

@@ -18,6 +18,7 @@ type Configuration struct {
 	ProjectID   int    `yaml:"project_id"`
 	Org         string `yaml:"github_org"`
 	Repo        string `yaml:"github_repo"`
+	LabelBug    string `yaml:"label_bug"`
 	NbDevs      int    `yaml:"number_of_developers"`
 	Columns     []Column
 	Limits      map[string]Limit
@@ -65,6 +66,10 @@ func NewConfiguration() (*Configuration, error) {
 
 	if conf.Repo == "" {
 		return nil, fmt.Errorf("github repo is missing")
+	}
+
+	if conf.LabelBug == "" {
+		return nil, fmt.Errorf("bug label is missing")
 	}
 
 	if conf.NbDevs == 0 {
