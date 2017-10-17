@@ -17,12 +17,12 @@ const (
 
 // CountOpenedPR returns the number of opened Pull Request for a user
 func CountOpenedPR(github *Github, user string) (int, error) {
-	return countPR(github, user, false)
+	return count(github, "open", "pr", user, "")
 }
 
 // CountOpenedPRToReview returns the number of opened Pull Request for a user, waiting review
 func CountOpenedPRToReview(github *Github, user string) (int, error) {
-	return countPR(github, user, true)
+	return count(github, "open", "pr", user, "+review:required")
 }
 
 // PullRequestsMetrics for prometheus
@@ -41,15 +41,12 @@ func PullRequestsMetrics(github *Github, user string) (string, error) {
 	return strings.Join(metrics, "\n"), nil
 }
 
-func countPR(github *Github, user string, onlyToReview bool) (int, error) {
-	url := fmt.Sprintf(searchPattern, "open", "pr", user)
-	if onlyToReview {
-		url += "+review:required"
-	}
+func count(github *Github, status, issueType, user, extra string) (int, error) {
+	url := fmt.Sprintf(searchPattern, status, issueType, user, extra)
 	s := search{}
 
 	if err := github.GetJSON(url, &s); err != nil {
-		return 0, fmt.Errorf("could not count PR: %v", err)
+		return 0, fmt.Errorf("could not count %s with status %s, user %s and extra %s: %v", issueType, status, user, extra, err)
 	}
 
 	return s.TotalCount, nil
