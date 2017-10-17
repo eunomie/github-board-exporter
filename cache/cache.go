@@ -38,13 +38,14 @@ func (c *Cache) autoRefreshContent() {
 }
 
 func (c *Cache) refreshContent() error {
-	log.Println("refresh content")
+	log.Println("refresh content...")
 
 	content, err := c.refresh()
 	if err != nil {
 		return fmt.Errorf("could not refresh content: %v", err)
 	}
 	c.Content = content
+	log.Println("...refreshed")
 
 	return nil
 }
