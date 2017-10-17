@@ -12,6 +12,7 @@ type search struct {
 const (
 	openedPRMetricsPattern         = "github_board_pr_count{user=\"%s\"} %d"
 	openedPRToReviewMetricsPattern = "github_board_pr_to_review{user=\"%s\"} %d"
+	issuesMetricsPattern           = "github_board_issues{user=\"%s\",opened=\"%t\"} %d"
 	searchPattern                  = "https://api.github.com/search/issues?q=state:%s+type:%s+user:%s%s"
 )
 
@@ -25,6 +26,16 @@ func CountOpenedPRToReview(github *Github, user string) (int, error) {
 	return count(github, "open", "pr", user, "+review:required")
 }
 
+// CountOpenedIssues return the number of opened issues accross the org
+func CountOpenedIssues(github *Github, user string) (int, error) {
+	return count(github, "open", "issue", user, "")
+}
+
+// CountClosedIssues return the number of closed issues accross the org
+func CountClosedIssues(github *Github, user string) (int, error) {
+	return count(github, "closed", "issue", user, "")
+}
+
 // PullRequestsMetrics for prometheus
 func PullRequestsMetrics(github *Github, user string) (string, error) {
 	openedPR, err := CountOpenedPR(github, user)
@@ -35,9 +46,19 @@ func PullRequestsMetrics(github *Github, user string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	openedIssues, err := CountOpenedIssues(github, user)
+	if err != nil {
+		return "", err
+	}
+	closedIssues, err := CountClosedIssues(github, user)
+	if err != nil {
+		return "", err
+	}
 	metrics := []string{}
 	metrics = append(metrics, fmt.Sprintf(openedPRMetricsPattern, user, openedPR))
 	metrics = append(metrics, fmt.Sprintf(openedPRToReviewMetricsPattern, user, reviewPR))
+	metrics = append(metrics, fmt.Sprintf(issuesMetricsPattern, user, true, openedIssues))
+	metrics = append(metrics, fmt.Sprintf(issuesMetricsPattern, user, false, closedIssues))
 	return strings.Join(metrics, "\n"), nil
 }
 

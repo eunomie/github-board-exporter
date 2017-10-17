@@ -53,7 +53,7 @@ type cardFields struct {
 
 const (
 	projectURLPattern            = "https://api.github.com/projects/%d"
-	issuesMetricsPattern         = "github_board_issues{column=\"%s\",project=\"%d\"} %d"
+	boardIssuesMetricsPattern    = "github_board_issues{column=\"%s\",project=\"%d\"} %d"
 	totalIssuesMetricsPattern    = "github_board_issues_count{project=\"%d\"} %d"
 	wipIssuesMetricsPattern      = "github_board_issues_wip{project=\"%d\"} %d"
 	limitExceededPattern         = "github_board_limit_exceeded{column=\"%s\",project=\"%d\",exceeded=\"%t\",limit=\"%d\"} %d"
@@ -155,7 +155,7 @@ func (p *Project) Metrics(c *configuration.Configuration) string {
 		if c.Wip[col.Name] {
 			wipIssues += nbIssues
 		}
-		metric := fmt.Sprintf(issuesMetricsPattern, col.Name, p.ID, nbIssues)
+		metric := fmt.Sprintf(boardIssuesMetricsPattern, col.Name, p.ID, nbIssues)
 		metrics = append(metrics, metric)
 		if col.LimitSet {
 			limitMetric := fmt.Sprintf(limitExceededPattern, col.Name, p.ID,
