@@ -12,6 +12,7 @@ type search struct {
 const (
 	openedPRMetricsPattern         = "github_board_pr_count{user=\"%s\"} %d"
 	openedPRToReviewMetricsPattern = "github_board_pr_to_review{user=\"%s\"} %d"
+	searchPattern                  = "https://api.github.com/search/issues?q=state:%s+type:%s+user:%s%s"
 )
 
 // CountOpenedPR returns the number of opened Pull Request for a user
@@ -41,7 +42,7 @@ func PullRequestsMetrics(github *Github, user string) (string, error) {
 }
 
 func countPR(github *Github, user string, onlyToReview bool) (int, error) {
-	url := fmt.Sprintf("https://api.github.com/search/issues?q=is:open+is:pr+user:%s", user)
+	url := fmt.Sprintf(searchPattern, "open", "pr", user)
 	if onlyToReview {
 		url += "+review:required"
 	}
