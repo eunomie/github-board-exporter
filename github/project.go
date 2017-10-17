@@ -53,10 +53,10 @@ type cardFields struct {
 
 const (
 	projectURLPattern            = "https://api.github.com/projects/%d"
-	issuesMetricsPattern         = "board_issues{column=\"%s\",project=\"%d\"} %d"
-	totalIssuesMetricsPattern    = "board_issues_count{project=\"%d\"} %d"
-	wipIssuesMetricsPattern      = "board_issues_wip{project=\"%d\"} %d"
-	limitExceededPattern         = "board_limit_exceeded{column=\"%s\",project=\"%d\",exceeded=\"%t\",limit=\"%d\"} %d"
+	issuesMetricsPattern         = "github_board_issues{column=\"%s\",project=\"%d\"} %d"
+	totalIssuesMetricsPattern    = "github_board_issues_count{project=\"%d\"} %d"
+	wipIssuesMetricsPattern      = "github_board_issues_wip{project=\"%d\"} %d"
+	limitExceededPattern         = "github_board_limit_exceeded{column=\"%s\",project=\"%d\",exceeded=\"%t\",limit=\"%d\"} %d"
 	noteWithoutLimitPattern      = "**Points** `0`\\n**Tasks** `%d`"
 	noteWithLimitPattern         = "**Points** `0`\\n**Tasks** `%d/%d`"
 	noteWithLimitExceededPattern = "**Points** `0`\\n**Tasks** `%d/%d`\\n\\n**Limit exceeded by %d**"

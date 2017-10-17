@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	nbDevMetricPattern = "number_of_developers %d"
+	nbDevMetricPattern = "github_board_number_of_developers %d"
 )
 
 // Configuration contains project id, access token to be authentified and user.

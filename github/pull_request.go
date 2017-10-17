@@ -10,8 +10,8 @@ type search struct {
 }
 
 const (
-	openedPRMetricsPattern         = "github_pr_count{user=\"%s\"} %d"
-	openedPRToReviewMetricsPattern = "github_pr_to_review{user=\"%s\"} %d"
+	openedPRMetricsPattern         = "github_board_pr_count{user=\"%s\"} %d"
+	openedPRToReviewMetricsPattern = "github_board_pr_to_review{user=\"%s\"} %d"
 )
 
 // CountOpenedPR returns the number of opened Pull Request for a user
