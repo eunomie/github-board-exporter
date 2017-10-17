@@ -27,6 +27,7 @@ func main() {
 
 	c := cache.NewCache(30*time.Minute, allMetrics(conf, g))
 	http.HandleFunc("/metrics", metrics(c))
+	http.HandleFunc("/health", health(c))
 	http.ListenAndServe(":8080", nil)
 }
 
@@ -59,5 +60,15 @@ func allMetrics(c *configuration.Configuration, g *github.Github) func() (string
 		metrics = append(metrics, c.Metrics())
 
 		return strings.Join(metrics, "\n"), nil
+	}
+}
+
+func health(c *cache.Cache) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if c.Content == "" {
+			http.Error(w, "could not read cache", http.StatusInternalServerError)
+		} else {
+			fmt.Fprintln(w, "")
+		}
 	}
 }
