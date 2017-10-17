@@ -42,7 +42,8 @@ func metrics(c *cache.Cache) func(w http.ResponseWriter, r *http.Request) {
 func allMetrics(c *configuration.Configuration, g *github.Github) func() (string, error) {
 	return func() (string, error) {
 		id := c.ProjectID
-		u := c.User
+		o := c.Org
+		r := c.Repo
 		metrics := []string{}
 
 		p, err := github.NewProject(id, g, c)
@@ -51,9 +52,9 @@ func allMetrics(c *configuration.Configuration, g *github.Github) func() (string
 		}
 		metrics = append(metrics, p.Metrics(c))
 
-		pr, err := github.PullRequestsMetrics(g, u)
+		pr, err := github.PullRequestsMetrics(g, o, r)
 		if err != nil {
-			return "", fmt.Errorf("could not read pull request metrics for user %s: %v", u, err)
+			return "", fmt.Errorf("could not read pull request metrics for org %s and repo %s: %v", o, r, err)
 		}
 		metrics = append(metrics, pr)
 

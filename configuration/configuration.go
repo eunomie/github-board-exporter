@@ -16,7 +16,8 @@ const (
 type Configuration struct {
 	AccessToken string
 	ProjectID   int    `yaml:"project_id"`
-	User        string `yaml:"github_user"`
+	Org         string `yaml:"github_org"`
+	Repo        string `yaml:"github_repo"`
 	NbDevs      int    `yaml:"number_of_developers"`
 	Columns     []Column
 	Limits      map[string]Limit
@@ -58,8 +59,12 @@ func NewConfiguration() (*Configuration, error) {
 		return nil, fmt.Errorf("project id is missing")
 	}
 
-	if conf.User == "" {
+	if conf.Org == "" {
 		return nil, fmt.Errorf("github user is missing")
+	}
+
+	if conf.Repo == "" {
+		return nil, fmt.Errorf("github repo is missing")
 	}
 
 	if conf.NbDevs == 0 {

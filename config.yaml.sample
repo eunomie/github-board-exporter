@@ -1,5 +1,6 @@
 project_id: Github Project ID
-github_user: The user/org to search opened PR
+github_org: The org to search opened PR
+github_repo: The repo to search issues
 number_of_developers: current number of developers in the team
 columns:
 - name: Name of the column
