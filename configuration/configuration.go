@@ -19,6 +19,8 @@ type Configuration struct {
 	User        string `yaml:"github_user"`
 	NbDevs      int    `yaml:"number_of_developers"`
 	Columns     []Column
+	Limits      map[string]Limit
+	Wip         map[string]bool
 }
 
 // Column contains configuration for a column as limit
@@ -28,6 +30,12 @@ type Column struct {
 	Wip   bool
 }
 
+// Limit contains limit configuration and set attribute for a column
+type Limit struct {
+	Limit int
+	Set   bool
+}
+
 // NewConfiguration reads config,yaml
 func NewConfiguration() (*Configuration, error) {
 	accessToken, set := os.LookupEnv("GITHUB_ACCESS_TOKEN")
@@ -35,7 +43,7 @@ func NewConfiguration() (*Configuration, error) {
 		return nil, fmt.Errorf("GITHUB_ACCESS_TOKEN must be defined")
 	}
 
-	conf := Configuration{AccessToken: accessToken}
+	conf := Configuration{AccessToken: accessToken, Limits: map[string]Limit{}, Wip: map[string]bool{}}
 
 	data, err := ioutil.ReadFile("config.yaml")
 	if err != nil {
@@ -58,27 +66,12 @@ func NewConfiguration() (*Configuration, error) {
 		return nil, fmt.Errorf("number_of_developers is missing")
 	}
 
+	for _, col := range conf.Columns {
+		conf.Wip[col.Name] = col.Wip
+		conf.Limits[col.Name] = Limit{col.Limit, col.Limit > 0}
+	}
+
 	return &conf, nil
-}
-
-// Limit returns the maximum number of items in a column
-func (c *Configuration) Limit(colName string) (int, bool) {
-	for _, col := range c.Columns {
-		if col.Name == colName {
-			return col.Limit, col.Limit > 0
-		}
-	}
-	return 0, false
-}
-
-// Wip indicates if a column contains wip or not
-func (c *Configuration) Wip(colName string) bool {
-	for _, col := range c.Columns {
-		if col.Name == colName {
-			return col.Wip
-		}
-	}
-	return false
 }
 
 // Metrics returns conf metrics

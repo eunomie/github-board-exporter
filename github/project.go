@@ -81,7 +81,8 @@ func NewProject(id int, github *Github, c *configuration.Configuration) (*Projec
 			return nil, fmt.Errorf("could not fetch cards for project %d: %v", id, err)
 		}
 		col.NbIssues = col.numberOfIssues()
-		col.Limit, col.LimitSet = c.Limit(col.Name)
+		limit := c.Limits[col.Name]
+		col.Limit, col.LimitSet = limit.Limit, limit.Set
 		if col.LimitSet {
 			col.Exceeded = col.NbIssues > col.Limit
 			col.ExtraIssues = max(0, col.NbIssues-col.Limit)
@@ -151,7 +152,7 @@ func (p *Project) Metrics(c *configuration.Configuration) string {
 	for _, col := range p.Columns {
 		nbIssues := col.numberOfIssues()
 		totalIssues += nbIssues
-		if c.Wip(col.Name) {
+		if c.Wip[col.Name] {
 			wipIssues += nbIssues
 		}
 		metric := fmt.Sprintf(issuesMetricsPattern, col.Name, p.ID, nbIssues)
