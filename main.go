@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/eunomie/github-board-exporter/cache"
@@ -41,19 +42,22 @@ func allMetrics(c *configuration.Configuration, g *github.Github) func() (string
 	return func() (string, error) {
 		id := c.ProjectID
 		u := c.User
+		metrics := []string{}
 
 		p, err := github.NewProject(id, g, c)
 		if err != nil {
 			return "", fmt.Errorf("could not read project %d: %v", id, err)
 		}
-		boardMetrics := p.Metrics()
+		metrics = append(metrics, p.Metrics())
 
 		pr, err := github.PullRequestsMetrics(g, u)
 		if err != nil {
 			return "", fmt.Errorf("could not read pull request metrics for user %s: %v", u, err)
 		}
+		metrics = append(metrics, pr)
 
-		metrics := fmt.Sprintf("%s\n%s", boardMetrics, pr)
-		return metrics, nil
+		metrics = append(metrics, c.Metrics())
+
+		return strings.Join(metrics, "\n"), nil
 	}
 }
